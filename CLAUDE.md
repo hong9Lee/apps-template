@@ -17,8 +17,9 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 
 ## 타겟 플랫폼
 
-- **Android only** (Play Store 출시 목적)
-- iOS, Web, Desktop 코드는 Flutter 기본 생성물. 사용하지 않음.
+- **Android 우선** (Play Store 먼저 출시)
+- **iOS 예정** (수익화 구조 검증 후 App Store 출시 계획 → Flutter 선택 이유)
+- Web, Desktop은 사용하지 않음
 
 ## 기술 스택
 
@@ -40,18 +41,17 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 | 5 | Remote Config | `firebase_remote_config` | 서버에서 값 변경 (광고 빈도, UI 텍스트 등) |
 | 6 | GDPR/UMP 동의 | `google_mobile_ads` 내장 UMP | 개인정보 동의 화면 (AdMob 필수 요구사항) |
 | 7 | App Open Ad | `google_mobile_ads` | 앱 실행/복귀 시 전면 광고 |
-| 8 | FCM 푸시 알림 | `firebase_messaging` | 리텐션 유지, 사용자 재방문 유도 |
-| 9 | Network Check | `connectivity_plus` | 오프라인 시 광고 로드 방지 |
-| 10 | Force Update | Remote Config 활용 | 최소 버전 강제 업데이트 다이얼로그 |
-| 11 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
-| 12 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
-| 13 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
+| 8 | Network Check | `connectivity_plus` | 오프라인 시 광고 로드 방지 |
+| 9 | Force Update | Remote Config 활용 | 최소 버전 강제 업데이트 다이얼로그 |
+| 10 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
+| 11 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
+| 12 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
 
 ### 의도적으로 제외한 기능
 
+- FCM 푸시 알림 (앱별로 필요 시 추가. 템플릿 공통 기능 아님)
 - Firebase Performance Monitoring (불필요한 복잡도)
 - 로컬 저장소 라이브러리 (앱별로 필요 시 추가)
-- iOS 관련 설정 전체
 - 테스트 코드 (생산성 우선)
 - CI/CD (수동 빌드 및 배포)
 
@@ -89,8 +89,6 @@ lib/
 │   │   └── analytics_service.dart
 │   ├── consent/
 │   │   └── consent_manager.dart  # GDPR/UMP 동의 처리
-│   ├── fcm/
-│   │   └── fcm_service.dart      # 푸시 알림 설정
 │   ├── network/
 │   │   └── network_checker.dart  # 연결 상태 확인
 │   ├── review/
@@ -116,7 +114,7 @@ lib/
 ### 2. Firebase 프로젝트
 - [ ] Firebase Console에서 새 프로젝트 생성
 - [ ] `google-services.json` 교체 (android/app/)
-- [ ] Analytics, Crashlytics, Remote Config, FCM 활성화
+- [ ] Analytics, Crashlytics, Remote Config 활성화
 
 ### 3. AdMob
 - [ ] AdMob Console에서 새 앱 등록
