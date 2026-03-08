@@ -101,36 +101,46 @@ lib/
     └── .gitkeep
 ```
 
-## Clone Checklist
+## 클론 후 출시까지 필수 단계
 
-템플릿을 clone한 후 반드시 변경해야 할 항목:
+템플릿을 clone한 후, 아래 순서대로 진행해야 빌드 및 출시가 가능하다.
 
-### 1. 앱 식별자
+### Step 1. 앱 식별자 변경
 - [ ] `android/app/build.gradle.kts` → `applicationId` 변경 (예: `com.hg.myapp`)
 - [ ] `android/app/build.gradle.kts` → `namespace` 변경
-- [ ] `android/app/src/main/AndroidManifest.xml` → `android:label` 변경
 - [ ] `pubspec.yaml` → `name`, `description` 변경
 
-### 2. Firebase 프로젝트
-- [ ] Firebase Console에서 새 프로젝트 생성
-- [ ] `google-services.json` 교체 (android/app/)
-- [ ] Analytics, Crashlytics, Remote Config 활성화
+### Step 2. Firebase 프로젝트 연결 (빌드 필수 — 없으면 빌드 실패)
+- [ ] [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
+- [ ] Android 앱 등록 (applicationId 입력)
+- [ ] `google-services.json` 다운로드 → `android/app/` 에 배치
+- [ ] Firebase Console에서 Analytics, Crashlytics, Remote Config 활성화
 
-### 3. AdMob
-- [ ] AdMob Console에서 새 앱 등록
-- [ ] `ad_config.dart`에 실제 광고 유닛 ID 입력 (prod flavor)
-- [ ] `AndroidManifest.xml`에 AdMob App ID 메타데이터 추가
+> **주의: `google-services.json` 없이는 빌드 자체가 불가능하다.**
+> 템플릿에는 포함되어 있지 않으므로, clone 후 가장 먼저 해야 할 작업.
 
-### 4. 앱 고유 설정
+### Step 3. AdMob 설정
+- [ ] [AdMob Console](https://admob.google.com/)에서 새 앱 등록
+- [ ] 광고 유닛 생성 (배너, 전면, 리워드, App Open)
+- [ ] `lib/config/ad_config.dart` 에 prod용 광고 유닛 ID 입력
+- [ ] `AndroidManifest.xml` 에 AdMob App ID 메타데이터 추가
+
+### Step 4. 앱 고유 기능 개발
+- [ ] `lib/features/` 디렉토리에 앱 고유 기능 구현
 - [ ] 앱 아이콘 교체
-- [ ] 스플래시 화면 (선택)
-- [ ] `features/` 디렉토리에 앱 고유 기능 구현
-- [ ] 개인정보처리방침 URL 준비
+- [ ] 앱 이름 변경 (`build.gradle.kts`의 `resValue("string", "app_name", "...")`)
 
-### 5. 릴리즈 빌드
-- [ ] 서명 키 생성 및 `key.properties` 설정
-- [ ] `build.gradle.kts`에 release signingConfig 설정
-- [ ] `flutter build appbundle --flavor prod` 로 빌드
+### Step 5. 출시 준비
+- [ ] 개인정보처리방침 URL 준비 (Play Store 필수)
+- [ ] 서명 키 생성 (`keytool`) 및 `key.properties` 설정
+- [ ] `build.gradle.kts`에 release signingConfig 설정 (현재 debug 키 사용 중)
+- [ ] Firebase Console에서 Remote Config 기본값 설정
+
+### Step 6. 빌드 및 출시
+- [ ] `flutter build appbundle --flavor prod --dart-define=FLAVOR=prod --obfuscate --split-debug-info=build/debug-info`
+- [ ] Play Console에 앱 등록 + AAB 업로드
+- [ ] 앱 콘텐츠 등급 설정
+- [ ] 스토어 등록정보 작성 (스크린샷, 설명 등)
 
 ## Remote Config 기본 키
 
