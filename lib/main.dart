@@ -6,9 +6,9 @@ import 'config/remote_config.dart';
 import 'core/admob/app_open_ad_manager.dart';
 import 'core/admob/interstitial_ad_manager.dart';
 import 'core/admob/rewarded_ad_manager.dart';
-import 'core/analytics/analytics_service.dart';
-import 'core/consent/consent_manager.dart';
-import 'core/review/review_service.dart';
+import 'core/analytics_service.dart';
+import 'core/consent_manager.dart';
+import 'core/review_service.dart';
 
 final appOpenAdManager = AppOpenAdManager();
 

@@ -1,13 +1,11 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/ad_config.dart';
-import 'ad_manager.dart';
 
 class RewardedAdManager {
   static RewardedAd? _ad;
 
-  static Future<void> load() async {
-    if (!await AdGuard.canLoadAd()) return;
+  static void load() {
     RewardedAd.load(
       adUnitId: AdConfig.rewardedId,
       request: const AdRequest(),

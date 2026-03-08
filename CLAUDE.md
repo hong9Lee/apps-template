@@ -41,16 +41,16 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 | 5 | Remote Config | `firebase_remote_config` | 서버에서 값 변경 (광고 빈도, UI 텍스트 등) |
 | 6 | GDPR/UMP 동의 | `google_mobile_ads` 내장 UMP | 개인정보 동의 화면 (AdMob 필수 요구사항) |
 | 7 | App Open Ad | `google_mobile_ads` | 앱 실행/복귀 시 전면 광고 |
-| 8 | Network Check | `connectivity_plus` | 오프라인 시 광고 로드 방지 |
-| 9 | Force Update | Remote Config 활용 | 최소 버전 강제 업데이트 다이얼로그 |
-| 10 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
-| 11 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
-| 12 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
+| 8 | Force Update | Remote Config 활용 | 최소 버전 강제 업데이트 다이얼로그 |
+| 9 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
+| 10 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
+| 11 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
 
 ### 의도적으로 제외한 기능
 
 - FCM 푸시 알림 (앱별로 필요 시 추가. 템플릿 공통 기능 아님)
 - Firebase Performance Monitoring (불필요한 복잡도)
+- Network Check / connectivity_plus (AdMob SDK가 오프라인 자체 처리)
 - 로컬 저장소 라이브러리 (앱별로 필요 시 추가)
 - 테스트 코드 (생산성 우선)
 - CI/CD (수동 빌드 및 배포)
@@ -72,32 +72,25 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 
 ```
 lib/
-├── main.dart                    # 앱 진입점
-├── app.dart                     # MaterialApp 설정, 라우팅
+├── main.dart                    # 앱 진입점 + MaterialApp
 ├── config/
 │   ├── ad_config.dart           # AdMob 광고 ID 관리 (flavor별)
+│   ├── flavor_config.dart       # dev/prod 환경 분리
 │   ├── remote_config.dart       # Remote Config 키 및 기본값
 │   └── firebase_config.dart     # Firebase 초기화
 ├── core/
 │   ├── admob/
-│   │   ├── ad_manager.dart      # 광고 로드/표시 통합 관리
 │   │   ├── banner_ad_widget.dart
 │   │   ├── interstitial_ad_manager.dart
 │   │   ├── rewarded_ad_manager.dart
 │   │   └── app_open_ad_manager.dart
-│   ├── analytics/
-│   │   └── analytics_service.dart
-│   ├── consent/
-│   │   └── consent_manager.dart  # GDPR/UMP 동의 처리
-│   ├── network/
-│   │   └── network_checker.dart  # 연결 상태 확인
-│   ├── review/
-│   │   └── review_service.dart   # In App Review 로직
-│   └── update/
-│       └── force_update.dart     # 강제 업데이트 체크
-├── features/                     # 앱별 고유 기능 (clone 후 여기에 추가)
+│   ├── analytics_service.dart   # Firebase Analytics 래퍼
+│   ├── consent_manager.dart     # GDPR/UMP 동의 처리
+│   ├── force_update.dart        # 강제 업데이트 체크
+│   └── review_service.dart      # In App Review 로직
+├── features/                    # 앱별 고유 기능 (clone 후 여기에 추가)
 │   └── .gitkeep
-└── shared/                       # 공통 위젯, 유틸리티
+└── shared/                      # 공통 위젯, 유틸리티
     └── .gitkeep
 ```
 
