@@ -1,6 +1,15 @@
 # Claude Code
 .claude/
 
+# Firebase (앱별 고유 파일 — 템플릿에 포함하지 않음)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Signing (비밀 키 — 절대 커밋 금지)
+**/key.properties
+**/*.jks
+**/*.keystore
+
 # Miscellaneous
 *.class
 *.log

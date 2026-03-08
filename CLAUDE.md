@@ -122,8 +122,11 @@ lib/
 ### Step 3. AdMob 설정
 - [ ] [AdMob Console](https://admob.google.com/)에서 새 앱 등록
 - [ ] 광고 유닛 생성 (배너, 전면, 리워드, App Open)
-- [ ] `lib/config/ad_config.dart` 에 prod용 광고 유닛 ID 입력
-- [ ] `AndroidManifest.xml` 에 AdMob App ID 메타데이터 추가
+- [ ] `lib/config/ad_config.dart` → `_prod*` 상수에 실제 광고 유닛 ID 입력
+- [ ] `AndroidManifest.xml` → `com.google.android.gms.ads.APPLICATION_ID` 값을 실제 AdMob App ID로 교체 (현재 테스트 ID)
+
+> **주의: `ad_config.dart`의 prod ID가 placeholder(`XXXXXXXX`)이면 광고 수익 0원.**
+> **`AndroidManifest.xml`의 AdMob App ID도 테스트 ID → 실제 ID로 반드시 교체.**
 
 ### Step 4. 앱 고유 기능 개발
 - [ ] `lib/features/` 디렉토리에 앱 고유 기능 구현

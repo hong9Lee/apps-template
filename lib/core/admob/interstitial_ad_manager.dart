@@ -2,6 +2,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/ad_config.dart';
 import '../../config/remote_config.dart';
+import 'ad_manager.dart';
 
 class InterstitialAdManager {
   static InterstitialAd? _ad;
@@ -16,7 +17,8 @@ class InterstitialAdManager {
     }
   }
 
-  static void load() {
+  static Future<void> load() async {
+    if (!await AdGuard.canLoadAd()) return;
     InterstitialAd.load(
       adUnitId: AdConfig.interstitialId,
       request: const AdRequest(),

@@ -19,14 +19,17 @@ void main() async {
   await FirebaseConfig.init();
   // 2. Remote Config 값 로드
   await RemoteConfigService.init();
-  // 3. GDPR 동의 요청
+  // 3. GDPR 동의 요청 (완료까지 대기)
   await ConsentManager.requestConsent();
-  // 4. AdMob 초기화 + 광고 미리 로드
+  // 4. AdMob 초기화
   await MobileAds.instance.initialize();
-  InterstitialAdManager.load();
-  RewardedAdManager.load();
-  appOpenAdManager.init();
-  // 5. 리뷰 요청 (실행 횟수 기반)
+  // 5. 동의 완료된 경우에만 광고 미리 로드
+  if (await ConsentManager.canRequestAds()) {
+    InterstitialAdManager.load();
+    RewardedAdManager.load();
+    appOpenAdManager.init();
+  }
+  // 6. 리뷰 요청 (실행 횟수 기반)
   ReviewService.requestIfReady();
 
   runApp(const MyApp());

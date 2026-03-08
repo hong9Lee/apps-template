@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/remote_config.dart';
 
 class ForceUpdate {
   /// 현재 앱 버전이 Remote Config의 minimum_version보다 낮으면 강제 업데이트 다이얼로그 표시.
   /// main 화면 진입 후 호출.
-  static void checkAndShow(BuildContext context, String currentVersion) {
+  static void checkAndShow(
+    BuildContext context, {
+    required String currentVersion,
+    required String packageName,
+  }) {
     final minimum = RemoteConfigService.minimumVersion;
     if (_isOlderThan(currentVersion, minimum)) {
-      _showUpdateDialog(context);
+      _showUpdateDialog(context, packageName);
     }
   }
 
-  /// 버전 비교: current < minimum 이면 true
   static bool _isOlderThan(String current, String minimum) {
     final cur = current.split('.').map(int.tryParse).toList();
     final min = minimum.split('.').map(int.tryParse).toList();
@@ -26,7 +30,7 @@ class ForceUpdate {
     return false;
   }
 
-  static void _showUpdateDialog(BuildContext context) {
+  static void _showUpdateDialog(BuildContext context, String packageName) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -38,8 +42,10 @@ class ForceUpdate {
           actions: [
             TextButton(
               onPressed: () {
-                // TODO: Play Store URL로 이동
-                // launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=YOUR_APP_ID'));
+                launchUrl(
+                  Uri.parse('https://play.google.com/store/apps/details?id=$packageName'),
+                  mode: LaunchMode.externalApplication,
+                );
               },
               child: const Text('업데이트'),
             ),

@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/ad_config.dart';
 import '../../config/remote_config.dart';
+import 'ad_manager.dart';
 
 class AppOpenAdManager with WidgetsBindingObserver {
   AppOpenAd? _ad;
@@ -26,8 +27,9 @@ class AppOpenAdManager with WidgetsBindingObserver {
     }
   }
 
-  void _loadAd() {
+  Future<void> _loadAd() async {
     if (!RemoteConfigService.enableAppOpenAd) return;
+    if (!await AdGuard.canLoadAd()) return;
 
     AppOpenAd.load(
       adUnitId: AdConfig.appOpenId,

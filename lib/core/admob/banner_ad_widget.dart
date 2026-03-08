@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/ad_config.dart';
 import '../../config/remote_config.dart';
+import 'ad_manager.dart';
 
 class BannerAdWidget extends StatefulWidget {
   const BannerAdWidget({super.key});
@@ -18,10 +19,11 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   void initState() {
     super.initState();
-    if (RemoteConfigService.enableBannerAd) _loadAd();
+    if (RemoteConfigService.enableBannerAd) _tryLoadAd();
   }
 
-  void _loadAd() {
+  Future<void> _tryLoadAd() async {
+    if (!await AdGuard.canLoadAd()) return;
     _bannerAd = BannerAd(
       adUnitId: AdConfig.bannerId,
       size: AdSize.banner,
