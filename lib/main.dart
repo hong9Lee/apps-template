@@ -8,6 +8,7 @@ import 'core/admob/interstitial_ad_manager.dart';
 import 'core/admob/rewarded_ad_manager.dart';
 import 'core/analytics/analytics_service.dart';
 import 'core/consent/consent_manager.dart';
+import 'core/review/review_service.dart';
 
 final appOpenAdManager = AppOpenAdManager();
 
@@ -25,6 +26,8 @@ void main() async {
   InterstitialAdManager.load();
   RewardedAdManager.load();
   appOpenAdManager.init();
+  // 5. 리뷰 요청 (실행 횟수 기반)
+  ReviewService.requestIfReady();
 
   runApp(const MyApp());
 }
