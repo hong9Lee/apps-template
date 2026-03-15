@@ -175,3 +175,74 @@ flutter build appbundle --obfuscate --split-debug-info=build/debug-info
 - **에러 핸들링**: 크래시가 나면 Crashlytics가 잡음. 과도한 try-catch 불필요
 - **테스트 없음**: 생산성 우선. 수동 테스트로 충분
 - **feature 디렉토리**: 앱별 고유 기능은 `lib/features/`에 추가
+
+## 삽질 기록 & 해결 패턴
+
+실제 앱 개발 중 겪은 문제와 해결법. 같은 실수를 반복하지 않기 위한 기록.
+
+### 오디오 관련 (audioplayers 패키지 사용 시)
+
+#### 1. `just_audio` (ExoPlayer) → OOM 크래시
+- **문제**: `just_audio`는 ExoPlayer 기반. 여러 AudioPlayer 인스턴스 생성 시 OutOfMemoryError 발생
+- **해결**: `audioplayers` 패키지 사용 (MediaPlayer 기반, 훨씬 가벼움)
+
+#### 2. `audioplayers` ReleaseMode.loop → 루프 사이 ~0.5초 갭
+- **문제**: `audioplayers`의 루프 모드는 **공식 인정된 갭 이슈** ([Issue #77](https://github.com/bluefireteam/audioplayers/issues/77))
+- **해결**: 듀얼 플레이어 교대 방식
+  - 사운드 1개당 AudioPlayer 2개 (A, B) 생성
+  - Player A가 끝나기 2초 전에 Player B 시작
+  - WAV 파일에 2초 크로스페이드 내장 (시작: fade-in, 끝: fade-out)
+  - 두 플레이어가 겹치는 동안 자연스럽게 이어짐
+  - `ReleaseMode.stop` 사용 (loop 아님)
+
+#### 3. 동시 재생 시 소리가 안 남
+- **문제**: `audioplayers`의 기본 AudioFocus가 새 플레이어 시작 시 이전 플레이어를 자동 일시정지
+- **해결**: `AndroidAudioFocus.none` + `AVAudioSessionOptions.mixWithOthers` 설정
+  ```dart
+  await player.setAudioContext(AudioContext(
+    android: AudioContextAndroid(audioFocus: AndroidAudioFocus.none),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.playback,
+      options: {AVAudioSessionOptions.mixWithOthers},
+    ),
+  ));
+  ```
+
+#### 4. 프로시저럴 WAV 생성 시 캐시 무효화
+- **문제**: 알고리즘 수정 후에도 이전 WAV 캐시가 계속 재생됨
+- **해결**: 파일명에 버전 포함 (`dripnap_v{version}_{id}.wav`), 알고리즘 변경 시 버전 증가
+
+### 광고 관련
+
+#### 5. 전체화면 광고 중 앱 소리가 계속 남
+- **문제**: 전면/리워드/App Open 광고가 뜰 때 앱의 오디오가 배경에서 계속 재생
+- **해결**: 모든 전체화면 광고 매니저에 mute/unmute 콜백 추가
+  ```dart
+  _ad!.fullScreenContentCallback = FullScreenContentCallback(
+    onAdShowedFullScreenContent: (_) => AudioService.muteAll(),
+    onAdDismissedFullScreenContent: (ad) {
+      AudioService.unmuteAll();
+      ad.dispose();
+      // ...
+    },
+  );
+  ```
+
+#### 6. 전면 광고가 너무 자주 노출 → 사용성 파괴
+- **문제**: `interstitial_interval: 3`이면 3번째 액션마다 광고 → "뭐 하나 누르면 광고만 뜸"
+- **해결**: `interstitial_interval: 5` 이상 권장. 정지(stop) 액션은 카운트에서 제외. Remote Config로 서버에서 조절 가능
+
+#### 7. 리워드 광고 활용 전략
+- **리워드 광고 eCPM이 전면 광고의 2-5배** (~$5-15 vs ~$1-3)
+- 사용자 자발적 시청이라 정책 리스크 낮음
+- 추천 패턴: N번째 액션마다 리워드 광고 표시 (예: 3번째 사운드 선택 시)
+
+### UI/UX 관련
+
+#### 8. 활성 상태 표시는 아이콘으로
+- **문제**: "Tap to play/stop" 같은 텍스트 힌트는 사용자가 싫어함
+- **해결**: play/pause 아이콘 오버레이 (우하단 작은 원형) + 활성 시 glow 효과 + pulse 애니메이션
+
+#### 9. SnackBar 중복 노출
+- **문제**: 같은 경고가 연속으로 쌓여서 오래 남음
+- **해결**: `ScaffoldMessenger.of(context).clearSnackBars()` 호출 후 새 SnackBar 표시
