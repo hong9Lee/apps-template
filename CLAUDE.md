@@ -246,3 +246,77 @@ flutter build appbundle --obfuscate --split-debug-info=build/debug-info
 #### 9. SnackBar 중복 노출
 - **문제**: 같은 경고가 연속으로 쌓여서 오래 남음
 - **해결**: `ScaffoldMessenger.of(context).clearSnackBars()` 호출 후 새 SnackBar 표시
+
+---
+
+## Tintopia (컬러링 북) 교훈
+
+### CustomPaint / Canvas 관련
+
+#### 10. Hit test는 "가장 작은 영역" 기준으로
+- **문제**: `Path.contains(point)`로 영역 클릭 감지 시, 큰 영역(배경)이 작은 영역(잎사귀 안쪽)보다 먼저 매칭되어 의도한 영역이 선택 안 됨
+- **해결**: 모든 영역을 순회하며 `getBounds()` 면적이 가장 작은 영역을 선택
+  ```dart
+  int? _hitTest(Offset pos) {
+    int? bestIndex;
+    double bestArea = double.infinity;
+    for (var i = 0; i < regions.length; i++) {
+      if (regions[i].path.contains(pos)) {
+        final bounds = regions[i].path.getBounds();
+        final area = bounds.width * bounds.height;
+        if (area < bestArea) {
+          bestArea = area;
+          bestIndex = i;
+        }
+      }
+    }
+    return bestIndex;
+  }
+  ```
+
+#### 11. 브러시 모드에서 영역 채우기 vs 시각적 스트로크
+- **문제**: 브러시로 터치 시 영역 전체가 즉시 색으로 채워지면 사용자 경험이 나쁨 ("닿으면 바로 그 영역이 칠해져버려")
+- **해결**: 브러시 모드는 영역 채우기(region fill) 제거, 순수 시각적 스트로크(반투명 페인트 선)만 그림
+- **역할 분리**: Fill = 영역 단위 정확한 색 채우기, Brush = 자유롭게 칠하는 수채화 느낌
+- **블렌딩**: 반투명(alpha 180) 스트로크가 레이어로 쌓이면서 자연스러운 색 혼합 효과
+
+#### 12. shouldRepaint는 상황에 맞게
+- 인터랙티브 캔버스(색칠, 드로잉): `shouldRepaint() => true` (매 프레임 갱신 필요)
+- 정적 썸네일/아웃라인: `shouldRepaint() => oldDelegate.id != id` (데이터 변경 시만)
+
+### 로컬 저장 / CRUD 관련
+
+#### 13. 화면 간 데이터 동기화 — Navigator.push 복귀 후 reload
+- **문제**: 상세 화면에서 이름 변경 후 목록으로 돌아오면 이전 이름이 그대로 표시됨
+- **해결**: `await Navigator.push(...)` 후 반드시 데이터 리로드
+  ```dart
+  void _openItem(Item item) async {
+    await Navigator.push(context, MaterialPageRoute(...));
+    await _loadItems();  // 복귀 후 최신 데이터 로드
+  }
+  ```
+
+#### 14. 슬롯 시스템으로 무료/유료 리소스 관리
+- **패턴**: 무료 N개 + 리워드 광고 시청 시 M개 추가
+- **구현**: `SharedPreferences`에 보너스 슬롯 수 저장, `totalSlots = freeSlots + bonusSlots`
+- **UX**: 슬롯 부족 시 다이얼로그 → "Watch Ad" 버튼 → 리워드 광고 → 슬롯 해제
+- 유저 데이터 저장은 `path_provider` + JSON 파일로 충분 (DB 불필요, 비용 0)
+
+#### 15. Long press는 발견성이 낮음 — 명시적 UI 추가
+- **문제**: 카드 long press로 메뉴(이름 변경/삭제) 제공했으나 사용자가 인지 못함
+- **해결**: 카드에 `⋮` (more_vert) 아이콘 버튼 추가 → 탭으로도 메뉴 접근 가능
+- **원칙**: 중요한 기능은 항상 시각적 어포던스가 있어야 함
+
+### 광고 정책 추가 교훈
+
+#### 16. 광고 타이밍은 "전환 순간"에만
+- **문제**: 색칠 중 매번 색 선택할 때마다 전면 광고 → 사용성 극악 ("광고가 너무 자주떠서 사용성이 극악이야")
+- **해결**: **몰입 활동 중에는 광고 절대 금지**, 화면 전환(갤러리 복귀) 시에만 전면 광고
+- **원칙**: 사용자가 "한 작업을 완료하고 다음으로 넘어가는 순간"에만 전면 광고 허용
+  - ✅ 갤러리로 복귀, 화면 전환
+  - ❌ 색 선택, 도구 변경, 칠하기 등 진행 중 액션
+
+#### 17. 프로시저럴 콘텐츠 생성은 저작권 안전
+- 수학/알고리즘으로 생성된 패턴(만다라, 기하학, 모자이크 등)은 저작권 문제 없음
+- 외부 이미지 에셋 불필요 → 앱 크기 최소화, 법적 리스크 제로
+- 시드(seed) 기반 생성으로 무한한 다양성 확보 가능
