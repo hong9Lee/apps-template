@@ -49,7 +49,7 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 | 7 | App Open Ad | `google_mobile_ads` | 앱 실행/복귀 시 전면 광고 |
 | 8 | Force Update | Remote Config 활용 | 최소 버전 강제 업데이트 다이얼로그 |
 | 9 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
-| 10 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
+| 10 | 광고 ID 자동 분리 | `kDebugMode` | debug=테스트 광고, release=실제 광고 (flavor 불필요) |
 | 11 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
 | 12 | Material 자동 번역 | `flutter_localizations` | Material 위젯이 기기 언어에 맞게 자동 번역 |
 
@@ -65,7 +65,7 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 ## 광고 정책 주의사항
 
 ### AdMob 정책 (위반 시 계정 정지)
-- **dev 환경에서는 반드시 테스트 광고 ID 사용** → 실제 ID 사용 시 정책 위반
+- **debug 빌드에서는 자동으로 테스트 광고 ID 사용** → kDebugMode 기반 자동 분리
 - **GDPR 동의(UMP) 없이 광고 표시 금지** → EEA 사용자 대상 필수
 - 자체 클릭 유도 금지, 광고 위치 가이드라인 준수
 - 앱 콘텐츠가 있어야 함 (광고만 있는 앱은 리젝)
@@ -81,8 +81,7 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 lib/
 ├── main.dart                    # 앱 진입점 + MaterialApp
 ├── config/
-│   ├── ad_config.dart           # AdMob 광고 ID 관리 (flavor별)
-│   ├── flavor_config.dart       # dev/prod 환경 분리
+│   ├── ad_config.dart           # AdMob 광고 ID 관리 (debug/release 자동 분리)
 │   ├── remote_config.dart       # Remote Config 키 및 기본값
 │   └── firebase_config.dart     # Firebase 초기화
 ├── core/
@@ -140,7 +139,7 @@ lib/
 - [ ] Firebase Console에서 Remote Config 기본값 설정
 
 ### Step 6. 빌드 및 출시
-- [ ] `flutter build appbundle --flavor prod --dart-define=FLAVOR=prod --obfuscate --split-debug-info=build/debug-info`
+- [ ] `flutter build appbundle --obfuscate --split-debug-info=build/debug-info`
 - [ ] Play Console에 앱 등록 + AAB 업로드
 - [ ] 앱 콘텐츠 등급 설정
 - [ ] 스토어 등록정보 작성 (스크린샷, 설명 등)
@@ -159,14 +158,14 @@ lib/
 ## 빌드 명령어
 
 ```bash
-# 개발 (테스트 광고)
-flutter run --flavor dev --dart-define=FLAVOR=dev
+# 개발 (자동으로 테스트 광고)
+flutter run
 
-# 릴리즈 빌드 (실제 광고)
-flutter build appbundle --flavor prod --dart-define=FLAVOR=prod
+# 릴리즈 빌드 (자동으로 실제 광고)
+flutter build appbundle
 
 # 난독화 포함 릴리즈
-flutter build appbundle --flavor prod --dart-define=FLAVOR=prod --obfuscate --split-debug-info=build/debug-info
+flutter build appbundle --obfuscate --split-debug-info=build/debug-info
 ```
 
 ## 코딩 컨벤션
