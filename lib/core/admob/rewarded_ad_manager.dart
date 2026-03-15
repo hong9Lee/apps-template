@@ -1,6 +1,7 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/ad_config.dart';
+import 'ad_reward.dart';
 
 class RewardedAdManager {
   static RewardedAd? _ad;
@@ -17,7 +18,7 @@ class RewardedAdManager {
   }
 
   /// 리워드 광고 표시. 보상 콜백을 전달받는다.
-  static void show({required void Function(RewardItem reward) onRewarded}) {
+  static void show({required void Function(AdReward reward) onRewarded}) {
     if (_ad == null) {
       load();
       return;
@@ -34,6 +35,10 @@ class RewardedAdManager {
         load();
       },
     );
-    _ad!.show(onUserEarnedReward: (_, reward) => onRewarded(reward));
+    _ad!.show(
+      onUserEarnedReward: (_, reward) => onRewarded(
+        AdReward(amount: reward.amount.toInt(), type: reward.type),
+      ),
+    );
   }
 }
