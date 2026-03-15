@@ -27,20 +27,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
-
-    flavorDimensions += "environment"
-    productFlavors {
-        create("dev") {
-            dimension = "environment"
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
-            resValue("string", "app_name", "Apps Template DEV")
-        }
-        create("prod") {
-            dimension = "environment"
-            resValue("string", "app_name", "Apps Template")
-        }
+        resValue("string", "app_name", "Apps Template")
     }
 
     buildTypes {
