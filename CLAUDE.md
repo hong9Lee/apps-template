@@ -21,6 +21,12 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 - **iOS 예정** (수익화 구조 검증 후 App Store 출시 계획 → Flutter 선택 이유)
 - Web, Desktop은 사용하지 않음
 
+## 타겟 사용자
+
+- **전세계 대상** — 앱 UI는 **영어 기본**으로 작성
+- `flutter_localizations` 포함 — Material 위젯(DatePicker, Dialog 버튼 등)은 기기 언어에 맞게 자동 번역
+- 앱 고유 문자열은 영어로 하드코딩 (생산성 우선, ARB 기반 다국어 불필요)
+
 ## 기술 스택
 
 - **Flutter** (Dart SDK ^3.11.1, Flutter >=3.18.0)
@@ -45,6 +51,7 @@ clone 시 변경이 필요한 항목은 아래 "Clone Checklist" 참고.
 | 9 | App Lifecycle | Flutter 내장 `AppLifecycleListener` | 포그라운드 복귀 시 App Open Ad 등 처리 |
 | 10 | Flavor 분리 | Flutter flavor + dart-define | dev(테스트 광고)/prod(실제 광고) 환경 분리 |
 | 11 | 난독화 | ProGuard/R8 | 릴리즈 빌드 코드 보호, Firebase/AdMob 규칙 포함 |
+| 12 | Material 자동 번역 | `flutter_localizations` | Material 위젯이 기기 언어에 맞게 자동 번역 |
 
 ### 의도적으로 제외한 기능
 

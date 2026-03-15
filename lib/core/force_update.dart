@@ -37,8 +37,8 @@ class ForceUpdate {
       builder: (_) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: const Text('업데이트 필요'),
-          content: const Text('새로운 버전이 출시되었습니다.\n앱을 업데이트해주세요.'),
+          title: const Text('Update Required'),
+          content: const Text('A new version is available.\nPlease update the app.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -47,7 +47,7 @@ class ForceUpdate {
                   mode: LaunchMode.externalApplication,
                 );
               },
-              child: const Text('업데이트'),
+              child: const Text('Update'),
             ),
           ],
         ),
