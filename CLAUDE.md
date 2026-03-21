@@ -320,3 +320,58 @@ flutter build appbundle --obfuscate --split-debug-info=build/debug-info
 - 수학/알고리즘으로 생성된 패턴(만다라, 기하학, 모자이크 등)은 저작권 문제 없음
 - 외부 이미지 에셋 불필요 → 앱 크기 최소화, 법적 리스크 제로
 - 시드(seed) 기반 생성으로 무한한 다양성 확보 가능
+
+## ⚠️ Git 워크플로우 — 반드시 지켜야 할 규칙
+
+### 템플릿 레포 (apps-template) 보호 규칙
+
+1. **이 레포에는 템플릿 공통 기능만 커밋한다.** 앱별 고유 코드(SpickaRoo, CalcPack 등)는 절대 이 레포에 커밋하지 않는다.
+2. **앱별 파일(아이콘, 프라이버시 정책, 앱 고유 기능)은 각 앱 레포에만 존재해야 한다.**
+
+### 새 앱 생성 시 Git 워크플로우
+
+```bash
+# 1. 템플릿 복사 (git clone이 아닌 파일 복사)
+cp -r apps_template /path/to/app_list/NewApp
+
+# 2. 기존 .git 삭제 (템플릿 히스토리 제거 — 필수!)
+cd /path/to/app_list/NewApp
+rm -rf .git
+
+# 3. 새 git 초기화
+git init
+git remote add origin https://github.com/hong9Lee/NewApp.git
+
+# 4. 앱 고유 기능 개발 후 커밋
+git add -A
+git commit -m "Initial NewApp - ..."
+git branch -M main
+git push -u origin main
+```
+
+### 절대 하지 말 것
+
+- ❌ 템플릿 디렉토리에서 직접 `git add` / `git commit` / `git push` (앱 코드가 템플릿에 들어감)
+- ❌ 템플릿을 `.git`째로 복사한 후 그대로 push (템플릿 커밋 히스토리 23개가 앱 레포에 포함됨)
+- ❌ 앱 레포에서 작업 중 cwd가 템플릿으로 바뀐 상태에서 commit (워크트리 환경에서 특히 주의)
+
+### 올바른 앱 레포 상태
+
+각 앱 레포에는 아래처럼 **앱 고유 커밋만** 존재해야 한다:
+```
+abc1234 Fix some bug
+def5678 Initial AppName - description of app
+```
+템플릿 히스토리(init, Add Firebase, Add AdMob 등)가 보이면 안 된다.
+
+### 디렉토리 구조 참고
+
+```
+apps/
+├── apps_template/          ← 이 레포 (템플릿 전용, 앱 코드 금지)
+└── app_list/
+    ├── SpickaRoo/          ← 독립 git 레포
+    ├── CalcPack/           ← 독립 git 레포
+    ├── DecibelByte/        ← 독립 git 레포
+    └── ...
+```
