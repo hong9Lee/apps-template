@@ -135,6 +135,115 @@ lib/
     └── .gitkeep
 ```
 
+## 출시 준비 자동 체크리스트
+
+사용자가 "출시 준비해줘" 또는 "출시할거야"라고 하면, **물어보지 말고 아래를 순서대로 자동 수행**한다.
+
+### Phase 1: 자동 점검 (Claude가 코드 확인, 사용자에게 묻지 않음)
+
+| # | 점검 항목 | 확인 방법 | 미충족 시 |
+|---|----------|----------|----------|
+| 1 | `google-services.json` 존재 + package_name 일치 | `android/app/google-services.json` 읽기 | ⛔ 빌드 불가. Firebase Console에서 다운받으라고 안내 |
+| 2 | `ad_config.dart` prod ID가 실제 ID인지 | placeholder(`XXXXXXXX`) 여부 체크 | 사용자에게 AdMob Console에서 광고 단위 ID 요청 |
+| 3 | `AndroidManifest.xml` AdMob App ID | 테스트 ID(`ca-app-pub-3940256099942544~3347511713`) 여부 | 사용자에게 AdMob App ID 요청 |
+| 4 | 서명 키 3종 세트 | `{appname}-release.jks` + `key.properties` + `build.gradle.kts` signingConfig | 없으면 Phase 2에서 생성 |
+| 5 | 개인정보처리방침 | `apps_template/docs/` 에 앱용 HTML 존재 여부 | 공통 템플릿 URL 사용 가능 (별도 생성 불필요) |
+| 6 | 앱 아이콘 | `android/app/src/main/res/mipmap-*` 에 커스텀 아이콘 | 경고만 (기본 아이콘으로도 출시 가능) |
+| 7 | pubspec.yaml 버전 | `version` 필드 확인 | 표시만 (보통 1.0.0+1) |
+
+### Phase 2: 미충족 항목 처리
+
+**Claude가 자동 처리:**
+- `key.properties` 생성 (사용자가 비밀번호 알려주면)
+- `build.gradle.kts`에 release signingConfig 추가
+- `ad_config.dart`에 광고 ID 입력 (사용자가 ID 알려주면)
+- `AndroidManifest.xml`에 App ID 입력
+- proguard 규칙 확인/추가
+
+**사용자가 직접 해야 하는 것:**
+- `keytool` 명령어로 keystore 생성 (대화형 비밀번호 입력 필요)
+  ```bash
+  keytool -genkey -v -keystore android/app/{appname}-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias {appname}
+  ```
+- AdMob Console에서 앱 등록 + 광고 유닛 4개(배너/전면/리워드/App Open) 생성
+  - 광고 유닛 생성 시 고급 설정은 전부 기본값(Google 최적화)으로 두면 됨
+  - App ID 1개 + 광고 단위 ID 4개를 Claude에게 알려주면 코드에 반영
+
+### Phase 3: 빌드 + 에뮬 실행 (자동, 물어보지 않음)
+
+Phase 1~2가 모두 충족되면 **즉시 자동 실행**:
+1. `flutter build appbundle --obfuscate --split-debug-info=build/debug-info` (릴리즈 AAB 빌드)
+2. `flutter run` 으로 에뮬레이터에 앱 실행 (스크린샷 촬영용)
+3. 사용자가 스크린샷 찍을 수 있도록 대기
+4. 변경사항이 있으면 앱 레포에 커밋 + 푸쉬 (사용자가 푸쉬 요청 시)
+
+### Phase 4: Play Console 등록 가이드
+
+스크린샷 완료 후, Play Console 등록 절차를 단계별로 안내:
+1. Play Console에서 앱 만들기
+2. 앱 콘텐츠 설정 (아래 "공통 답변" 표 참고)
+3. 스토어 등록정보 작성 (스크린샷, 설명, 아이콘 등)
+4. 프로덕션 트랙에 AAB 업로드
+5. 출시 심사 제출
+
+### Play Console 프로덕션 액세스 조건
+- **첫 번째 앱(SpickaRoo)**이 프로덕션 승인을 받아야 나머지 앱들도 프로덕션 출시 가능
+- 비공개 테스트 14일 + 테스터 12명 이상 → 프로덕션 신청 가능 (SpickaRoo로 이미 충족)
+- SpickaRoo 프로덕션 승인 후에는 나머지 앱들은 비공개 테스트 없이 바로 프로덕션 출시 가능
+
+## 출시 인프라 컨텍스트 (모든 앱 공통)
+
+아래 정보는 모든 앱에 공통으로 적용되며, 출시 시 매번 확인할 필요 없다.
+
+### 공통 계정/프로젝트 정보
+- **AdMob 퍼블리셔 ID**: `ca-app-pub-9658177035634815` (모든 앱 동일 계정)
+- **Firebase 프로젝트**: `hg-apps-7b8fa` (모든 앱이 하나의 Firebase 프로젝트 공유)
+- **Play Console 연락처**: `ekflalsha15@naver.com`
+- **Play Console 개발자 계정**: 등록 완료 (SpickaRoo 테스트 공개 완료)
+
+### 서명 키 패턴 (앱별 생성 필요)
+각 앱마다 독립 keystore를 생성한다:
+```
+파일: android/app/{appname}-release.jks
+key.properties:
+  storePassword=***
+  keyPassword=***
+  keyAlias={appname}
+  storeFile={appname}-release.jks
+```
+생성 명령어 (사용자가 직접 실행 — 대화형 비밀번호 입력 필요):
+```bash
+keytool -genkey -v -keystore android/app/{appname}-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias {appname}
+```
+
+**사용자가 비밀번호를 알려주면** Claude가 `key.properties` 생성 + `build.gradle.kts` signingConfig 설정을 자동으로 해준다.
+비밀번호를 안 알려주면 사용자가 직접 `key.properties`를 만들고, Claude는 `build.gradle.kts`만 수정한다.
+
+### 개인정보처리방침 패턴
+- **공통 템플릿**: `apps_template/docs/privacy-policy.html` (범용, 앱 이름 미특정)
+- **앱별 전용**: 필요 시 `apps_template/docs/{appname}.html` (SpickaRoo처럼)
+- **호스팅**: 템플릿 레포가 public → GitHub Pages로 접근 가능
+- URL 패턴: `https://hong9lee.github.io/apps_template/privacy-policy.html` (공통) 또는 `https://hong9lee.github.io/apps_template/{appname}.html` (앱별)
+- 내용: AdMob, Firebase Analytics, Crashlytics, Remote Config 데이터 수집 고지
+
+### AdMob 앱별 설정 (앱마다 다름)
+- AdMob Console에서 앱 등록 → App ID 발급 (AndroidManifest.xml에 입력)
+- 광고 유닛 4개 생성: 배너, 전면, 리워드, App Open → ad_config.dart에 입력
+- 템플릿 기본값은 테스트 ID → **출시 전 반드시 실제 ID로 교체**
+
+### Play Console 앱 콘텐츠 공통 답변 (모든 앱 동일)
+| 항목 | 답변 |
+|------|------|
+| 앱 액세스 권한 | 특별한 액세스 권한 없이 모든 기능 사용 가능 |
+| 광고 포함 | 예 |
+| 콘텐츠 등급 | 설문 질문 전부 "아니요" → 전체이용가(Everyone) |
+| 타겟 연령 | 13세 이상 (광고 포함이므로) |
+| 아동 관심 유도 | 아니요 |
+| 뉴스 앱 | 아니요 |
+| 데이터 보안 — 수집 데이터 | 기기 ID(AdMob), 앱 활동(Analytics), 크래시 로그(Crashlytics) |
+| 데이터 보안 — 암호화 전송 | 예 |
+| 데이터 보안 — 삭제 요청 | 아니요 (로컬 저장만) |
+
 ## 클론 후 출시까지 필수 단계
 
 템플릿을 clone한 후, 아래 순서대로 진행해야 빌드 및 출시가 가능하다.
@@ -145,10 +254,9 @@ lib/
 - [ ] `pubspec.yaml` → `name`, `description` 변경
 
 ### Step 2. Firebase 프로젝트 연결 (빌드 필수 — 없으면 빌드 실패)
-- [ ] [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
-- [ ] Android 앱 등록 (applicationId 입력)
+- [ ] Firebase Console에서 기존 프로젝트(`hg-apps-7b8fa`)에 Android 앱 추가 (applicationId 입력)
 - [ ] `google-services.json` 다운로드 → `android/app/` 에 배치
-- [ ] Firebase Console에서 Analytics, Crashlytics, Remote Config 활성화
+- [ ] Analytics, Crashlytics, Remote Config는 프로젝트 레벨에서 이미 활성화됨
 
 > **주의: `google-services.json` 없이는 빌드 자체가 불가능하다.**
 > 템플릿에는 포함되어 있지 않으므로, clone 후 가장 먼저 해야 할 작업.
@@ -168,15 +276,15 @@ lib/
 - [ ] 앱 이름 변경 (`build.gradle.kts`의 `resValue("string", "app_name", "...")`)
 
 ### Step 5. 출시 준비
-- [ ] 개인정보처리방침 URL 준비 (Play Store 필수)
-- [ ] 서명 키 생성 (`keytool`) 및 `key.properties` 설정
+- [ ] 개인정보처리방침: SpickaRoo 것 복사 → 앱 이름 변경 → `/docs/privacy-policy.html`
+- [ ] 서명 키 생성 (`keytool`) → `android/app/{appname}-release.jks` + `key.properties`
 - [ ] `build.gradle.kts`에 release signingConfig 설정 (현재 debug 키 사용 중)
 - [ ] Firebase Console에서 Remote Config 기본값 설정
 
 ### Step 6. 빌드 및 출시
 - [ ] `flutter build appbundle --obfuscate --split-debug-info=build/debug-info`
 - [ ] Play Console에 앱 등록 + AAB 업로드
-- [ ] 앱 콘텐츠 등급 설정
+- [ ] 앱 콘텐츠 설정 (위 "공통 답변" 표 참고)
 - [ ] 스토어 등록정보 작성 (스크린샷, 설명 등)
 
 ## Remote Config 기본 키
