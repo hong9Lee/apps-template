@@ -187,9 +187,9 @@ Phase 1~2가 모두 충족되면 **즉시 자동 실행**:
 5. 출시 심사 제출
 
 ### Play Console 프로덕션 액세스 조건
-- **첫 번째 앱(SpickaRoo)**이 프로덕션 승인을 받아야 나머지 앱들도 프로덕션 출시 가능
-- 비공개 테스트 14일 + 테스터 12명 이상 → 프로덕션 신청 가능 (SpickaRoo로 이미 충족)
-- SpickaRoo 프로덕션 승인 후에는 나머지 앱들은 비공개 테스트 없이 바로 프로덕션 출시 가능
+- **SpickaRoo가 2026-03-26 프로덕션 출시 완료** → 나머지 앱들 바로 프로덕션 출시 가능
+- 비공개 테스트 14일 + 테스터 12명 조건은 SpickaRoo로 이미 충족됨
+- 이후 앱들은 비공개 테스트 없이 바로 프로덕션 트랙에 AAB 업로드 가능
 
 ## 출시 인프라 컨텍스트 (모든 앱 공통)
 
@@ -199,7 +199,17 @@ Phase 1~2가 모두 충족되면 **즉시 자동 실행**:
 - **AdMob 퍼블리셔 ID**: `ca-app-pub-9658177035634815` (모든 앱 동일 계정)
 - **Firebase 프로젝트**: `hg-apps-7b8fa` (모든 앱이 하나의 Firebase 프로젝트 공유)
 - **Play Console 연락처**: `ekflalsha15@naver.com`
-- **Play Console 개발자 계정**: 등록 완료 (SpickaRoo 테스트 공개 완료)
+- **Play Console 개발자 계정**: 등록 완료, SpickaRoo 프로덕션 출시 완료 (2026-03-26)
+- **개발자 웹사이트**: `https://hong9lee.github.io` (GitHub Pages)
+- **app-ads.txt**: `https://hong9lee.github.io/app-ads.txt` (AdMob 광고 사기 방지, 레포: `hong9Lee/hong9Lee.github.io`)
+- **app-ads.txt 내용**: `google.com, pub-9658177035634815, DIRECT, f08c47fec0942fa0`
+
+### Play Console 메뉴 경로 (UI 기준, 2026-03 확인)
+- **스토어 등록정보 수정**: 왼쪽 메뉴 → "사용자 늘리기" → "앱 정보" → "스토어 등록정보" → "수정"
+- **개발자 웹사이트/연락처 설정**: 왼쪽 메뉴 → "사용자 늘리기" → "앱 정보" → "스토어 설정" (스토어 등록정보 수정 페이지가 아님!)
+- **앱 콘텐츠 설정**: 왼쪽 메뉴 → "앱 콘텐츠" (정책 관련)
+- **프로덕션 출시**: 왼쪽 메뉴 → "테스트 및 출시" → "프로덕션"
+- **AAB 업로드**: 프로덕션 → "새 버전 만들기" → AAB 파일 업로드
 
 ### 서명 키 패턴 (앱별 생성 필요)
 각 앱마다 독립 keystore를 생성한다:
@@ -243,6 +253,25 @@ keytool -genkey -v -keystore android/app/{appname}-release.jks -keyalg RSA -keys
 | 데이터 보안 — 수집 데이터 | 기기 ID(AdMob), 앱 활동(Analytics), 크래시 로그(Crashlytics) |
 | 데이터 보안 — 암호화 전송 | 예 |
 | 데이터 보안 — 삭제 요청 | 아니요 (로컬 저장만) |
+
+### AdMob 광고 유닛 생성 가이드
+- AdMob Console에서 앱 등록 후, 광고 유닛 4개 생성 (배너, 전면, 리워드, 앱 오프닝)
+- 광고 유닛 생성 시 **고급 설정은 전부 기본값(Google 최적화)**으로 두면 됨
+- 생성 결과 화면에서 **2개의 ID**가 나옴:
+  - **1번 (App ID)**: `ca-app-pub-9658177035634815~XXXXXXXXXX` → AndroidManifest.xml에 입력 (앱당 1개, 4개 유닛 모두 동일)
+  - **2번 (광고 단위 ID)**: `ca-app-pub-9658177035634815/XXXXXXXXXX` → ad_config.dart에 입력 (유닛별로 다름)
+
+### AdMob ↔ Play Console 앱 연결
+- AdMob Console → 해당 앱 → **앱 설정** → "앱 스토어에 연결"
+- 패키지명 또는 Play Store URL로 검색
+- **Play Store에 앱이 인덱싱되는데 몇 시간~며칠 걸림** → 출시 직후에는 검색 안 될 수 있음. 나중에 다시 시도
+- 연결 안 해도 광고는 나가므로 급하지 않음
+
+### app-ads.txt (계정 레벨, 1회 설정 완료)
+- `hong9Lee.github.io` 레포 루트에 `app-ads.txt` 배치 완료
+- 내용: `google.com, pub-9658177035634815, DIRECT, f08c47fec0942fa0`
+- Play Console 각 앱의 **스토어 설정** → 웹사이트에 `https://hong9lee.github.io` 입력 필요
+- AdMob Console에서 "업데이트 확인" → 크롤링에 몇 분~몇 시간 소요
 
 ## 클론 후 출시까지 필수 단계
 
